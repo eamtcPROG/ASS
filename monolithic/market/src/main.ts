@@ -20,6 +20,16 @@ async function bootstrap() {
     .setDescription(
       'HTTP API for the Market service. Manage products, users, and search with versioned endpoints, validation, and standard error responses.',
     )
+    .addBearerAuth(
+      {
+        description: `[just text field] Please enter token in following format: Bearer `,
+        name: 'Authorization',
+        bearerFormat: 'Bearer',
+        scheme: 'Bearer',
+        type: 'http',
+      },
+      'jwt',
+    )
     .setVersion(version)
     .build();
   const document = SwaggerModule.createDocument(app, config);

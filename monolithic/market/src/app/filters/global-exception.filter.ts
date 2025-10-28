@@ -6,6 +6,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { Response } from 'express';
+import { ResultObjectDto } from '../dto/resultobject.dto';
+import { MessageDto, MessageType } from '../dto/message.dto';
 
 @Catch()
 export class GlobalExceptionFilter implements ExceptionFilter {
@@ -14,20 +16,36 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     const response = ctx.getResponse<Response>();
 
     let status = HttpStatus.INTERNAL_SERVER_ERROR;
-    let message = 'Internal server error';
+    let messages: MessageDto[] = [];
 
     if (exception instanceof HttpException) {
       status = exception.getStatus();
-      message = JSON.stringify(exception.getResponse());
+      const res = exception.getResponse();
+      if (typeof res === 'string') {
+        messages = [new MessageDto(res, MessageType.ERROR)];
+      } else if (typeof res === 'object' && res !== null) {
+        const payload = res as Record<string, unknown>;
+        const extracted =
+          payload['message'] ?? payload['error'] ?? exception.message;
+        if (Array.isArray(extracted)) {
+          messages = extracted.map(
+            (m) => new MessageDto(String(m), MessageType.ERROR),
+          );
+        } else if (typeof extracted === 'string') {
+          messages = [new MessageDto(extracted, MessageType.ERROR)];
+        } else {
+          messages = [new MessageDto('Unexpected error', MessageType.ERROR)];
+        }
+      } else {
+        messages = [new MessageDto(exception.message, MessageType.ERROR)];
+      }
     } else if (exception instanceof Error) {
-      // You can log or transform errors here
-      message = exception.message;
+      messages = [new MessageDto(exception.message, MessageType.ERROR)];
+    } else {
+      messages = [new MessageDto('Internal server error', MessageType.ERROR)];
     }
 
-    response.status(status).json({
-      statusCode: status,
-      message,
-      timestamp: new Date().toISOString(),
-    });
+    const result = new ResultObjectDto<unknown>(null, true, status, messages);
+    response.status(status).json(result);
   }
 }

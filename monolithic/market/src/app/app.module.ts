@@ -7,6 +7,7 @@ import { UserModule } from 'src/user/user.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from 'src/user/models/user.model';
 import { GlobalErrorsInterceptor } from './interceptors/global-errors.interceptor';
+import { GlobalResponseInterceptor } from './interceptors/global-response.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 
 @Module({
@@ -39,6 +40,10 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,
+    },
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: GlobalResponseInterceptor,
     },
   ],
 })

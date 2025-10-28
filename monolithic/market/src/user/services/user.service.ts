@@ -3,6 +3,8 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../models/user.model';
 import { CreateUserDto } from '../dto/create-user.dto';
+import { ListDto } from 'src/app/dto/list.dto';
+import { UserDto } from '../dto/user.dto';
 
 @Injectable()
 export class UserService {
@@ -16,5 +18,14 @@ export class UserService {
 
   findByEmail(email: string) {
     return this.repo.find({ where: { email: email.toLowerCase() } });
+  }
+
+  async getList(page: number, onPage: number): Promise<ListDto<UserDto>> {
+    const [users, total] = await this.repo.findAndCount({
+      skip: (page - 1) * onPage,
+      take: onPage,
+    });
+    const objects = users.map((user) => UserDto.fromEntity(user));
+    return new ListDto<UserDto>(objects, total, onPage);
   }
 }

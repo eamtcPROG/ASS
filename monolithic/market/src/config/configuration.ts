@@ -9,4 +9,9 @@ export default () => ({
     password: process.env.POSTGRES_PASSWORD ?? 'market',
     database: process.env.POSTGRES_DB ?? 'market',
   },
+
+  jwt: {
+    secret: process.env.JWT_SECRET ?? 'secret',
+    expires_in: parseInt(process.env.JWT_EXPIRES_IN ?? '3600', 10),
+  },
 });

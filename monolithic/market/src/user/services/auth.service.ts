@@ -1,21 +1,33 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from '../dto/create-user.dto';
 import { UserService } from './user.service';
-import * as bcrypt from 'bcrypt';
+import { hash, genSalt, compare } from 'bcrypt';
 import { SignInDto } from '../dto/sign-in.dto';
 import { UserDto } from '../dto/user.dto';
+import { JwtService } from '@nestjs/jwt';
+import { AuthDto, AuthTokenPayload } from '../dto/auth.dto';
+import { ConfigService } from '@nestjs/config';
 @Injectable()
 export class AuthService {
-  constructor(private readonly service: UserService) {}
+  constructor(
+    private readonly service: UserService,
+    private jwtService: JwtService,
+    private configService: ConfigService,
+  ) {}
 
   async hashPassword(password: string): Promise<string> {
-    const salt: string = await bcrypt.genSalt();
-    const hash: string = await bcrypt.hash(password, salt);
-    return hash;
+    const salt: string = await genSalt();
+    const hashed: string = await hash(password, salt);
+    return hashed;
   }
 
-  async isCorrectPassword(password: string, hash: string) {
-    return await bcrypt.compare(password, hash);
+  async isCorrectPassword(password: string, hash: string): Promise<boolean> {
+    const isCorrect = await compare(password, hash);
+    return isCorrect;
   }
   async signUp(object: CreateUserDto) {
     const existingUser = await this.service.findByEmail(object.email);
@@ -29,22 +41,37 @@ export class AuthService {
       password: hashedPassword,
     });
 
-    return UserDto.fromEntity(user);
+    const result = UserDto.fromEntity(user);
+    return await this.signToken(result);
   }
 
   async signIn(object: SignInDto) {
-    const user = await this.service.findByEmail(object.email);
+    const user = await this.validate(object.email, object.password);
+    return await this.signToken(user);
+  }
+
+  async validate(email: string, password: string) {
+    const user = await this.service.findByEmail(email);
     if (user.length === 0) {
-      throw new BadRequestException('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     const match: boolean = await this.isCorrectPassword(
-      object.password,
+      password,
       user[0].password,
     );
     if (!match) {
-      throw new BadRequestException('Invalid credentials');
+      throw new UnauthorizedException('Invalid credentials');
     }
     return UserDto.fromEntity(user[0]);
+  }
+
+  async signToken(user: UserDto): Promise<AuthDto> {
+    const payload: AuthTokenPayload = {
+      sub: user.id,
+      email: user.email,
+    };
+    const access_token = await this.jwtService.signAsync(payload);
+    return new AuthDto(access_token, user);
   }
 }
