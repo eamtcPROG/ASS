@@ -13,6 +13,8 @@ import { ProductModule } from 'src/product/produc.module';
 import { Product } from 'src/product/models/product.model';
 import { OrderModule } from 'src/order/order.module';
 import { Order } from 'src/order/models/order.model';
+import { SearchModule } from 'src/search/search.module';
+import { CacheModule } from '@nestjs/cache-manager';
 
 @Module({
   imports: [
@@ -36,9 +38,14 @@ import { Order } from 'src/order/models/order.model';
         };
       },
     }),
+    CacheModule.register({
+      isGlobal: true,
+      ttl: 6000000, // 1 hour
+    }),
     UserModule,
     ProductModule,
     OrderModule,
+    SearchModule,
   ],
   controllers: [AppController],
   providers: [

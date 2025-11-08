@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Like, Repository } from 'typeorm';
 import { Product } from '../models/product.model';
 import { ListDto } from 'src/app/dto/list.dto';
 import { ProductDto } from '../dto/product.dto';
@@ -12,11 +12,18 @@ import { AddProductDto } from '../dto/add-product.dto';
 export class ProductService {
   constructor(@InjectRepository(Product) private repo: Repository<Product>) {}
 
-  async getList(page: number, onPage: number): Promise<ListDto<ProductDto>> {
+  async getList(
+    page: number,
+    onPage: number,
+    search: string = '',
+  ): Promise<ListDto<ProductDto>> {
     const [products, total] = await this.repo.findAndCount({
       skip: ListDto.skip(page, onPage),
       take: onPage,
-      where: { status: ProductStatus.ACTIVE },
+      where: [
+        { status: ProductStatus.ACTIVE, name: Like(`%${search}%`) },
+        { status: ProductStatus.ACTIVE, description: Like(`%${search}%`) },
+      ],
     });
     const objects = products.map((product) => ProductDto.fromEntity(product));
     return new ListDto<ProductDto>(objects, total, onPage);

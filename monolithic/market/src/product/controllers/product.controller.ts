@@ -2,9 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Get,
   Post,
-  Query,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -14,11 +12,10 @@ import {
   ApiConsumes,
   ApiOkResponse,
   ApiOperation,
-  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { ProductService } from '../services/product.service';
-import { ResultListDto } from 'src/app/dto/resultlist.dto';
+
 import { ProductDto } from '../dto/product.dto';
 import { CurrentUser } from 'src/user/decorators/current-user.decorator';
 import { User } from 'src/user/models/user.model';
@@ -27,22 +24,11 @@ import { JwtGuard } from 'src/user/guards/jwt.guard';
 import { ResultObjectDto } from 'src/app/dto/resultobject.dto';
 
 @ApiTags('Product')
+@UseGuards(JwtGuard)
+@ApiBearerAuth('jwt')
 @Controller('product')
 export class ProductController {
   constructor(private readonly service: ProductService) {}
-
-  @ApiOperation({ summary: 'Get a list of products' })
-  @ApiConsumes('application/json')
-  @ApiOkResponse({
-    type: ResultListDto<ProductDto>,
-    description: 'List of products',
-  })
-  @ApiQuery({ name: 'page', type: Number, required: false })
-  @ApiQuery({ name: 'onpage', type: Number, required: false })
-  @Get('/')
-  getList(@Query('page') page?: number, @Query('onpage') onpage?: number) {
-    return this.service.getList(page ?? 1, onpage ?? 10);
-  }
 
   @ApiOperation({ summary: 'Add a product' })
   @ApiConsumes('application/json')
@@ -51,8 +37,6 @@ export class ProductController {
     description: 'Product',
   })
   @ApiBody({ type: AddProductDto })
-  @UseGuards(JwtGuard)
-  @ApiBearerAuth('jwt')
   @ApiBadRequestResponse({
     type: ResultObjectDto<null>,
     description: 'Name, price and description are required',
