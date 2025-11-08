@@ -115,6 +115,8 @@ export class UserDto {
   - `AuthService` handles password hashing, validation, and JWT issuance using `JwtService`.
   - `JwtStrategy` configures the passport-jwt strategy with secret from config and validates by returning the token payload.
   - `JwtGuard` protects routes; honors a `@Public()` decorator via metadata.
+  - `CurrentUser` decorator extracts the `currentUser` from the request for controller handlers.
+  - `CurrentUserInterceptor` resolves the authenticated user from the JWT and attaches it to `request.currentUser` for downstream access.
 
 ```32:46:/Users/mihaicoretchi/repos/ASS/monolithic/market/src/user/services/auth.service.ts
 async signUp(object: CreateUserDto) {
@@ -191,6 +193,34 @@ export class JwtGuard extends AuthGuard('jwt') {
 import { SetMetadata } from '@nestjs/common';
 
 export const Public = () => SetMetadata('isPublic', true);
+```
+
+- Current user decorator and interceptor:
+
+```13:18:/Users/mihaicoretchi/repos/ASS/monolithic/market/src/user/decorators/current-user.decorator.ts
+export const CurrentUser = createParamDecorator(
+  (data: never, context: ExecutionContext) => {
+    const request = context.switchToHttp().getRequest<Express.Request>();
+    return request.currentUser as User;
+  },
+);
+```
+
+```10:22:/Users/mihaicoretchi/repos/ASS/monolithic/market/src/user/interceptors/current-user.interceptor.ts
+@Injectable()
+export class CurrentUserInterceptor implements NestInterceptor {
+  constructor(private service: AuthService) {}
+
+  async intercept(context: ExecutionContext, handler: CallHandler) {
+    const request = context.switchToHttp().getRequest<Express.Request>();
+    const token = getJwtFromRequest(request);
+    if (!token) return handler.handle();
+    const user = await this.service.getUserFromToken(token);
+    if (!user) return handler.handle();
+    request.currentUser = user;
+    return handler.handle();
+  }
+}
 ```
 
 - **Controller and endpoints**: Public endpoints for sign-up/sign-in; protected listing with `JwtGuard`. All routes are annotated for Swagger.
