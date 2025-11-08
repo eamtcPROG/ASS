@@ -9,6 +9,8 @@ import { User } from 'src/user/models/user.model';
 import { GlobalErrorsInterceptor } from './interceptors/global-errors.interceptor';
 import { GlobalResponseInterceptor } from './interceptors/global-response.interceptor';
 import { APP_INTERCEPTOR } from '@nestjs/core';
+import { ProductModule } from 'src/product/produc.module';
+import { Product } from 'src/product/models/product.model';
 
 @Module({
   imports: [
@@ -28,11 +30,12 @@ import { APP_INTERCEPTOR } from '@nestjs/core';
           password: config.get<string>('database.password'),
           database: config.get<string>('database.database'),
           synchronize: true,
-          entities: [User],
+          entities: [User, Product],
         };
       },
     }),
     UserModule,
+    ProductModule,
   ],
   controllers: [AppController],
   providers: [

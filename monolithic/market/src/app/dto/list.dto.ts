@@ -8,4 +8,8 @@ export class ListDto<T> {
     this.total = total ?? 0;
     this.totalpages = Math.ceil(this.total / onPage) ?? 0;
   }
+
+  static skip(page: number, onPage: number) {
+    return (page - 1) * (onPage ?? 10);
+  }
 }

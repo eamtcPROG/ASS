@@ -22,7 +22,7 @@ export class UserService {
 
   async getList(page: number, onPage: number): Promise<ListDto<UserDto>> {
     const [users, total] = await this.repo.findAndCount({
-      skip: (page - 1) * onPage,
+      skip: ListDto.skip(page, onPage),
       take: onPage,
     });
     const objects = users.map((user) => UserDto.fromEntity(user));

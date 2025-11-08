@@ -3,6 +3,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { AuthTokenPayload } from '../dto/auth.dto';
+import { getJwtFromRequest } from 'src/app/tools/common.tools';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
@@ -12,23 +13,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
       throw new Error('Missing jwt.secret in configuration');
     }
 
-    const jwtFromRequest = (req?: {
-      headers?: Record<string, string>;
-    }): string | null => {
-      const authHeader = req?.headers?.['authorization'];
-      if (typeof authHeader !== 'string') {
-        return null;
-      }
-      const [scheme, token] = authHeader.split(' ');
-      if (scheme?.toLowerCase() !== 'bearer' || !token) {
-        return null;
-      }
-      return token;
-    };
-
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     super({
-      jwtFromRequest: jwtFromRequest,
+      jwtFromRequest: getJwtFromRequest,
       ignoreExpiration: false,
       secretOrKey: secret,
     });

@@ -10,13 +10,13 @@ import { SignInDto } from '../dto/sign-in.dto';
 import { UserDto } from '../dto/user.dto';
 import { JwtService } from '@nestjs/jwt';
 import { AuthDto, AuthTokenPayload } from '../dto/auth.dto';
-import { ConfigService } from '@nestjs/config';
+import { User } from '../models/user.model';
+
 @Injectable()
 export class AuthService {
   constructor(
     private readonly service: UserService,
     private jwtService: JwtService,
-    private configService: ConfigService,
   ) {}
 
   async hashPassword(password: string): Promise<string> {
@@ -73,5 +73,17 @@ export class AuthService {
     };
     const access_token = await this.jwtService.signAsync(payload);
     return new AuthDto(access_token, user);
+  }
+
+  async getUserFromToken(token: string): Promise<User | null> {
+    if (!token) return null;
+    const payload = this.jwtService.decode<AuthTokenPayload>(token);
+    if (!payload) return null;
+    if (payload.email) {
+      const user = await this.service.findByEmail(payload.email);
+      if (!user[0]) return null;
+      return user[0];
+    }
+    return null;
   }
 }
