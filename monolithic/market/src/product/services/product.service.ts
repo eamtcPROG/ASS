@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { Product } from '../models/product.model';
 import { ListDto } from 'src/app/dto/list.dto';
 import { ProductDto } from '../dto/product.dto';
-import { Status } from 'src/app/constants/status';
+import { ProductStatus } from 'src/app/constants/product-status';
 import { User } from 'src/user/models/user.model';
 import { AddProductDto } from '../dto/add-product.dto';
 
@@ -16,7 +16,7 @@ export class ProductService {
     const [products, total] = await this.repo.findAndCount({
       skip: ListDto.skip(page, onPage),
       take: onPage,
-      where: { status: Status.ACTIVE },
+      where: { status: ProductStatus.ACTIVE },
     });
     const objects = products.map((product) => ProductDto.fromEntity(product));
     return new ListDto<ProductDto>(objects, total, onPage);
@@ -34,16 +34,28 @@ export class ProductService {
 
   async reserveProduct(id: number): Promise<void> {
     const product = await this.repo.findOne({
-      where: { id, status: Status.ACTIVE },
+      where: { id, status: ProductStatus.ACTIVE },
     });
     if (!product) {
       throw new BadRequestException('Product not available');
     }
 
-    await this.updateStatus(id, Status.RESERVED);
+    await this.updateStatus(id, ProductStatus.RESERVED);
   }
 
   async sellProduct(id: number): Promise<void> {
-    await this.updateStatus(id, Status.SOLD);
+    await this.updateStatus(id, ProductStatus.SOLD);
+  }
+
+  async getProduct(id: number): Promise<Product | null> {
+    const product = await this.repo.findOne({
+      where: { id, status: ProductStatus.ACTIVE },
+    });
+
+    return product;
+  }
+
+  async releaseProduct(id: number): Promise<void> {
+    await this.updateStatus(id, ProductStatus.ACTIVE);
   }
 }

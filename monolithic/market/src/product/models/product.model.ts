@@ -1,6 +1,13 @@
-import { Status } from 'src/app/constants/status';
+import { ProductStatus } from 'src/app/constants/product-status';
+import { Order } from 'src/order/models/order.model';
 import { User } from 'src/user/models/user.model';
-import { Column, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity()
 export class Product {
@@ -16,9 +23,12 @@ export class Product {
   @Column()
   description: string;
 
-  @Column({ default: Status.ACTIVE })
+  @Column({ default: ProductStatus.ACTIVE })
   status: number;
 
   @ManyToOne(() => User, (user) => user.products)
   user: User;
+
+  @OneToMany(() => Order, (order) => order.product)
+  orders: Order[];
 }

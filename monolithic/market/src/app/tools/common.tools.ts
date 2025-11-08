@@ -11,3 +11,7 @@ export const getJwtFromRequest = (req?: {
   }
   return token;
 };
+
+export const getTimestamp = (): number => {
+  return Math.floor(Date.now() / 1000);
+};

@@ -11,6 +11,8 @@ import { GlobalResponseInterceptor } from './interceptors/global-response.interc
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { ProductModule } from 'src/product/produc.module';
 import { Product } from 'src/product/models/product.model';
+import { OrderModule } from 'src/order/order.module';
+import { Order } from 'src/order/models/order.model';
 
 @Module({
   imports: [
@@ -30,12 +32,13 @@ import { Product } from 'src/product/models/product.model';
           password: config.get<string>('database.password'),
           database: config.get<string>('database.database'),
           synchronize: true,
-          entities: [User, Product],
+          entities: [User, Product, Order],
         };
       },
     }),
     UserModule,
     ProductModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [
