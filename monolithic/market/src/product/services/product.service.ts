@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Product } from '../models/product.model';
@@ -26,5 +26,24 @@ export class ProductService {
     const product = this.repo.create(object);
     product.user = user;
     return ProductDto.fromEntity(await this.repo.save(product));
+  }
+
+  async updateStatus(id: number, status: number): Promise<void> {
+    await this.repo.update(id, { status });
+  }
+
+  async reserveProduct(id: number): Promise<void> {
+    const product = await this.repo.findOne({
+      where: { id, status: Status.ACTIVE },
+    });
+    if (!product) {
+      throw new BadRequestException('Product not available');
+    }
+
+    await this.updateStatus(id, Status.RESERVED);
+  }
+
+  async sellProduct(id: number): Promise<void> {
+    await this.updateStatus(id, Status.SOLD);
   }
 }
