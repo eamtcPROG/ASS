@@ -41,7 +41,7 @@ export class OrderService {
     user: User,
   ): Promise<OrderDto> {
     const order = await this.repo.findOne({
-      where: { id: idOrder, user },
+      where: { id: idOrder, user, status: OrderStatus.PENDING },
       relations: ['product', 'user'],
     });
     if (!order) {
@@ -65,7 +65,8 @@ export class OrderService {
 
   async cancelOrder(idOrder: number, user: User): Promise<OrderDto> {
     const order = await this.repo.findOne({
-      where: { id: idOrder, user },
+      where: { id: idOrder, user, status: OrderStatus.PENDING },
+      relations: ['product', 'user'],
     });
     if (!order) {
       throw new BadRequestException('Order not found');
