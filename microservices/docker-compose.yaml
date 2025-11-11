@@ -49,6 +49,23 @@ services:
       - postgres-search
     networks:
       - microservices-net
+  
+  product:
+    container_name: product-service
+    build:
+      context: ./product
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    ports:
+      - 3004:3004
+    volumes:
+      - ./product:/app
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - postgres-product
+    networks:
+      - microservices-net
 
   postgres-user:
     image: postgres:16-alpine
