@@ -5,6 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GlobalErrorsInterceptor } from './interceptors/global-errors.interceptor';
 import { GlobalResponseInterceptor } from './interceptors/global-response.interceptor';
+import { AuthService } from './services/auth.service';
+import { UserService } from './services/user.service';
+import { JwtStrategy } from './strategies/jwt.strategy';
+import { UserController } from './controllers/user.controller';
+import { User } from './models/user.model';
+import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -24,13 +30,27 @@ import { GlobalResponseInterceptor } from './interceptors/global-response.interc
           password: config.get<string>('database.password'),
           database: config.get<string>('database.database'),
           synchronize: true,
-          entities: [],
+          entities: [User],
         };
       },
     }),
+    TypeOrmModule.forFeature([User]),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (config: ConfigService) => ({
+        secret: config.get<string>('jwt.secret'),
+        signOptions: {
+          expiresIn: config.get<number>('jwt.expires_in'),
+        },
+      }),
+      inject: [ConfigService],
+    }),
   ],
-  controllers: [],
+  controllers: [UserController],
   providers: [
+    UserService,
+    AuthService,
+    JwtStrategy,
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,
