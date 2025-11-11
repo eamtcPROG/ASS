@@ -33,6 +33,23 @@ services:
     networks:
       - microservices-net
 
+  search:
+    container_name: search-service
+    build:
+      context: ./search
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    ports:
+      - 3003:3003
+    volumes:
+      - ./search:/app
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - postgres-search
+    networks:
+      - microservices-net
+
   postgres-user:
     image: postgres:16-alpine
     container_name: postgres-user
@@ -75,9 +92,54 @@ services:
     networks:
       - microservices-net
 
+
+
+  postgres-product:
+    image: postgres:16-alpine
+    container_name: postgres-product
+    ports:
+      - 5434:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: product
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-product-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - microservices-net
+
+  postgres-search:
+    image: postgres:16-alpine
+    container_name: postgres-search
+    ports:
+      - 5435:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: search
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-search-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - microservices-net
 volumes:
   postgres-user-data:
   postgres-order-data:
+  postgres-product-data:
+  postgres-search-data:
 networks:
   microservices-net:
     driver: bridge
