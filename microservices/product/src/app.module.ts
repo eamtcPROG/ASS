@@ -5,6 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GlobalErrorsInterceptor } from './interceptors/global-errors.interceptor';
 import { GlobalResponseInterceptor } from './interceptors/global-response.interceptor';
+import { Product } from './models/product.model';
+import { ProductController } from './controllers/product.controller';
+import { ProductService } from './services/product.service';
 
 @Module({
   imports: [
@@ -24,14 +27,15 @@ import { GlobalResponseInterceptor } from './interceptors/global-response.interc
           password: config.get<string>('database.password'),
           database: config.get<string>('database.database'),
           synchronize: true,
-          entities: [],
+          entities: [Product],
         };
       },
     }),
-    TypeOrmModule.forFeature([]),
+    TypeOrmModule.forFeature([Product]),
   ],
-  controllers: [],
+  controllers: [ProductController],
   providers: [
+    ProductService,
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,
