@@ -40,7 +40,7 @@ import { CacheModule } from '@nestjs/cache-manager';
     }),
     CacheModule.register({
       isGlobal: true,
-      ttl: 6000000, // 1 hour
+      ttl: 3600000, // 1 hour
     }),
     UserModule,
     ProductModule,
