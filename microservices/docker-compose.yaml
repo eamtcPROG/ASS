@@ -15,6 +15,24 @@ services:
       - postgres-user
     networks:
       - microservices-net
+
+  order:
+    container_name: order-service
+    build:
+      context: ./order
+      dockerfile: Dockerfile
+    command: npm run start:dev
+    ports:
+      - 3002:3002
+    volumes:
+      - ./order:/app
+    environment:
+      - NODE_ENV=development
+    depends_on:
+      - postgres-order
+    networks:
+      - microservices-net
+
   postgres-user:
     image: postgres:16-alpine
     container_name: postgres-user
@@ -35,9 +53,31 @@ services:
       start_period: 10s
     networks:
       - microservices-net
+  
+  postgres-order:
+    image: postgres:16-alpine
+    container_name: postgres-order
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: order
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-order-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - microservices-net
+
 volumes:
   postgres-user-data:
-
+  postgres-order-data:
 networks:
   microservices-net:
     driver: bridge
