@@ -1,4 +1,20 @@
 services:
+  traefik:
+    image: traefik:v3.1
+    container_name: traefik
+    command:
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --entrypoints.web.address=:80
+      # Dev-only dashboard
+      - --api.insecure=true
+    ports:
+      - "8000:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - microservices-net
   user:
     container_name: user-service
     build:
@@ -11,6 +27,13 @@ services:
       - ./user:/app
     environment:
       - NODE_ENV=development
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.user.rule=PathPrefix(`/api/users`)
+      - traefik.http.routers.user.entrypoints=web
+      - traefik.http.middlewares.user-strip.stripprefix.prefixes=/api/users
+      - traefik.http.routers.user.middlewares=user-strip
+      - traefik.http.services.user.loadbalancer.server.port=3001
     depends_on:
       - postgres-user
     networks:
@@ -28,6 +51,13 @@ services:
       - ./order:/app
     environment:
       - NODE_ENV=development
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.order.rule=PathPrefix(`/api/orders`)
+      - traefik.http.routers.order.entrypoints=web
+      - traefik.http.middlewares.order-strip.stripprefix.prefixes=/api/orders
+      - traefik.http.routers.order.middlewares=order-strip
+      - traefik.http.services.order.loadbalancer.server.port=3002
     depends_on:
       - postgres-order
     networks:
@@ -45,6 +75,13 @@ services:
       - ./search:/app
     environment:
       - NODE_ENV=development
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.search.rule=PathPrefix(`/api/search`)
+      - traefik.http.routers.search.entrypoints=web
+      - traefik.http.middlewares.search-strip.stripprefix.prefixes=/api/search
+      - traefik.http.routers.search.middlewares=search-strip
+      - traefik.http.services.search.loadbalancer.server.port=3003
     depends_on:
       - postgres-search
     networks:
@@ -62,6 +99,13 @@ services:
       - ./product:/app
     environment:
       - NODE_ENV=development
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.product.rule=PathPrefix(`/api/products`)
+      - traefik.http.routers.product.entrypoints=web
+      - traefik.http.middlewares.product-strip.stripprefix.prefixes=/api/products
+      - traefik.http.routers.product.middlewares=product-strip
+      - traefik.http.services.product.loadbalancer.server.port=3004
     depends_on:
       - postgres-product
     networks:
