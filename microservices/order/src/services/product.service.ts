@@ -10,7 +10,7 @@ export class ProductService {
   constructor(@InjectRepository(Product) private repo: Repository<Product>) {}
 
   getProduct(id: number): Promise<Product | null> {
-    return this.repo.findOne({ where: { id } });
+    return this.repo.findOne({ where: { id, status: ProductStatus.ACTIVE } });
   }
 
   async createProduct(

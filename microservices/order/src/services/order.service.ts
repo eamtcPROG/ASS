@@ -8,32 +8,39 @@ import { getTimestamp } from '../tools/common.tools';
 import { PlaceOrderDto } from '../dto/place-order.dto';
 import { PayOrderDto } from '../dto/pay-order.dto';
 import { OrderStatus } from '../constants/order-status';
+import { ProductService } from './product.service';
+import { DomainEventsPublisher } from 'src/events/domain-events.publisher';
 
 @Injectable()
 export class OrderService {
   constructor(
     @InjectRepository(Order) private repo: Repository<Order>,
-    // private readonly productService: ProductService,
+    private readonly productService: ProductService,
+    private readonly domainEventsPublisher: DomainEventsPublisher,
   ) {}
 
   async placeOrder(
     object: PlaceOrderDto,
     // , user: User
   ): Promise<OrderDto> {
-    // const product = await this.productService.getProduct(object.idproduct);
-    // if (!product) {
-    //   throw new BadRequestException('Product not available');
-    // }
+    const product = await this.productService.getProduct(object.idproduct);
+    if (!product) {
+      throw new BadRequestException('Product not available');
+    }
     const order = this.repo.create({
-      idproduct: object.idproduct,
+      idproduct: product.id,
       iduser: 1,
-      total: 100,
+      total: product.price,
       place_at: getTimestamp(),
     });
     const result = await this.repo.save(order);
-    // if (result) {
-    //   await this.productService.reserveProduct(result.product.id);
-    // }
+    if (result) {
+      await this.productService.reserveProduct(result.idproduct);
+      this.domainEventsPublisher.emitOrder(
+        result.idproduct,
+        OrderStatus.PENDING,
+      );
+    }
     return OrderDto.fromEntity(result);
   }
 
@@ -58,10 +65,10 @@ export class OrderService {
     }
     const result = await this.repo.save(order);
 
-    // TODO: sell product
-    // if (isFullyPaid) {
-    //   await this.productService.sellProduct(result.product.id);
-    // }
+    if (isFullyPaid) {
+      await this.productService.sellProduct(result.idproduct);
+      this.domainEventsPublisher.emitOrder(result.idproduct, OrderStatus.PAID);
+    }
 
     return OrderDto.fromEntity(result);
   }
@@ -76,10 +83,14 @@ export class OrderService {
     }
     order.status = OrderStatus.CANCELLED;
     const result = await this.repo.save(order);
-    // TODO: release product
-    // if (result) {
-    //   await this.productService.releaseProduct(result.product.id);
-    // }
+
+    if (result) {
+      await this.productService.releaseProduct(result.idproduct);
+      this.domainEventsPublisher.emitOrder(
+        result.idproduct,
+        OrderStatus.CANCELLED,
+      );
+    }
     return OrderDto.fromEntity(result);
   }
 }

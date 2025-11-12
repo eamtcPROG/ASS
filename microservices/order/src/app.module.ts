@@ -11,6 +11,9 @@ import { Order } from './models/order.model';
 import { ProductEventsController } from './events/product.events.controller';
 import { Product } from './models/product.model';
 import { ProductService } from './services/product.service';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { PRODUCT_RMQ, SEARCH_RMQ } from './constants/service';
+import { DomainEventsPublisher } from './events/domain-events.publisher';
 
 @Module({
   imports: [
@@ -34,12 +37,37 @@ import { ProductService } from './services/product.service';
         };
       },
     }),
+    ClientsModule.registerAsync([
+      {
+        name: SEARCH_RMQ,
+        useFactory: (config: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [config.getOrThrow<string>('rabbitmq.url')],
+            queue: 'search',
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: PRODUCT_RMQ,
+        useFactory: (config: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [config.getOrThrow<string>('rabbitmq.url')],
+            queue: 'product',
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
     TypeOrmModule.forFeature([Order, Product]),
   ],
   controllers: [OrderController, ProductEventsController],
   providers: [
     OrderService,
     ProductService,
+    DomainEventsPublisher,
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,

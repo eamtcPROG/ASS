@@ -10,6 +10,7 @@ import { SearchService } from './service/search.service';
 import { ProductEventsController } from './events/product.events.controller';
 import { ProductService } from './service/product.service';
 import { Product } from './models/product.model';
+import { OrderEventsController } from './events/order.events.controller';
 
 @Module({
   imports: [
@@ -35,7 +36,11 @@ import { Product } from './models/product.model';
     }),
     TypeOrmModule.forFeature([Product]),
   ],
-  controllers: [SearchController, ProductEventsController],
+  controllers: [
+    SearchController,
+    ProductEventsController,
+    OrderEventsController,
+  ],
   providers: [
     SearchService,
     ProductService,

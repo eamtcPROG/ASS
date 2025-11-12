@@ -25,6 +25,11 @@ async function bootstrap() {
     options: {
       urls: [rabbitmqUrl],
       queue: 'product',
+      noAck: false,
+      prefetchCount: 1,
+      queueOptions: {
+        durable: true,
+      },
     },
   });
   const config = new DocumentBuilder()
