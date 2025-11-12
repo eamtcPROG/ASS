@@ -8,6 +8,8 @@ import { GlobalResponseInterceptor } from './interceptors/global-response.interc
 import { Product } from './models/product.model';
 import { ProductController } from './controllers/product.controller';
 import { ProductService } from './services/product.service';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { DomainEventsPublisher } from './events/domain-events.publisher';
 
 @Module({
   imports: [
@@ -32,10 +34,41 @@ import { ProductService } from './services/product.service';
       },
     }),
     TypeOrmModule.forFeature([Product]),
+    ClientsModule.registerAsync([
+      {
+        name: 'ORDER_RMQ',
+        useFactory: (config: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [config.getOrThrow<string>('rabbitmq.url')],
+            queue: 'order',
+            queueOptions: {
+              durable: true,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+      {
+        name: 'SEARCH_RMQ',
+        useFactory: (config: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [config.getOrThrow<string>('rabbitmq.url')],
+            queue: 'search',
+            queueOptions: {
+              durable: true,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
   ],
   controllers: [ProductController],
   providers: [
     ProductService,
+    DomainEventsPublisher,
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,

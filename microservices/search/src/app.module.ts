@@ -7,6 +7,9 @@ import { GlobalErrorsInterceptor } from './interceptors/global-errors.intercepto
 import { GlobalResponseInterceptor } from './interceptors/global-response.interceptor';
 import { SearchController } from './controllers/search.controller';
 import { SearchService } from './service/search.service';
+import { ProductEventsController } from './events/product.events.controller';
+import { ProductService } from './service/product.service';
+import { Product } from './models/product.model';
 
 @Module({
   imports: [
@@ -26,15 +29,16 @@ import { SearchService } from './service/search.service';
           password: config.get<string>('database.password'),
           database: config.get<string>('database.database'),
           synchronize: true,
-          entities: [],
+          entities: [Product],
         };
       },
     }),
-    TypeOrmModule.forFeature([]),
+    TypeOrmModule.forFeature([Product]),
   ],
-  controllers: [SearchController],
+  controllers: [SearchController, ProductEventsController],
   providers: [
     SearchService,
+    ProductService,
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,

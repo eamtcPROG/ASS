@@ -14,12 +14,16 @@ import { ProductDto } from '../dto/product.dto';
 import { AddProductDto } from '../dto/add-product.dto';
 
 import { ResultObjectDto } from '../dto/resultobject.dto';
+import { DomainEventsPublisher } from '../events/domain-events.publisher';
 
 @ApiTags('Product')
 @ApiBearerAuth('jwt')
-@Controller('product')
+@Controller()
 export class ProductController {
-  constructor(private readonly service: ProductService) {}
+  constructor(
+    private readonly service: ProductService,
+    private readonly events: DomainEventsPublisher,
+  ) {}
 
   @ApiOperation({ summary: 'Add a product' })
   @ApiConsumes('application/json')
@@ -33,13 +37,17 @@ export class ProductController {
     description: 'Name, price and description are required',
   })
   @Post('/')
-  addProduct(
+  async addProduct(
     @Body() body: AddProductDto,
     // , @CurrentUser() user: User
   ) {
     if (!body.name || !body.price || !body.description) {
       throw new BadRequestException('Name, price and description are required');
     }
-    return this.service.addProduct(body);
+    const result = await this.service.addProduct(body);
+    // Emit domain event for other services
+    this.events.emitNewProduct(result);
+
+    return result;
   }
 }

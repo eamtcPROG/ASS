@@ -26,7 +26,7 @@ import { PayOrderDto } from '../dto/pay-order.dto';
 @ApiTags('Order')
 @ApiBearerAuth('jwt')
 // @UseGuards(JwtGuard)
-@Controller('order')
+@Controller()
 export class OrderController {
   constructor(private readonly service: OrderService) {}
 

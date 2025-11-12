@@ -8,6 +8,9 @@ import { GlobalResponseInterceptor } from './interceptors/global-response.interc
 import { OrderController } from './controllers/order.controller';
 import { OrderService } from './services/order.service';
 import { Order } from './models/order.model';
+import { ProductEventsController } from './events/product.events.controller';
+import { Product } from './models/product.model';
+import { ProductService } from './services/product.service';
 
 @Module({
   imports: [
@@ -27,15 +30,16 @@ import { Order } from './models/order.model';
           password: config.get<string>('database.password'),
           database: config.get<string>('database.database'),
           synchronize: true,
-          entities: [Order],
+          entities: [Order, Product],
         };
       },
     }),
-    TypeOrmModule.forFeature([Order]),
+    TypeOrmModule.forFeature([Order, Product]),
   ],
-  controllers: [OrderController],
+  controllers: [OrderController, ProductEventsController],
   providers: [
     OrderService,
+    ProductService,
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,

@@ -10,7 +10,7 @@ import { SearchService } from '../service/search.service';
 import { ResultListDto } from '../dto/resultlist.dto';
 
 @ApiTags('Search')
-@Controller('search')
+@Controller()
 export class SearchController {
   constructor(private readonly service: SearchService) {}
 

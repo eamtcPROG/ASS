@@ -14,4 +14,7 @@ export default () => ({
     secret: process.env.JWT_SECRET ?? 'secret',
     expires_in: parseInt(process.env.JWT_EXPIRES_IN ?? '3600', 10),
   },
+  rabbitmq: {
+    url: process.env.RABBITMQ_URI,
+  },
 });

@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { ConfigService } from '@nestjs/config';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { GlobalExceptionFilter } from './filters/global-exception.filter';
+import { Transport } from '@nestjs/microservices';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -15,6 +16,22 @@ async function bootstrap() {
   if (!version) {
     throw new Error('version is not set');
   }
+  const rabbitmqUrl = configService.get<string>('rabbitmq.url');
+  if (!rabbitmqUrl) {
+    throw new Error('RABBITMQ_URL is not set');
+  }
+  app.connectMicroservice({
+    transport: Transport.RMQ,
+    options: {
+      urls: [rabbitmqUrl],
+      queue: 'order',
+      noAck: false,
+      prefetchCount: 1,
+      queueOptions: {
+        durable: true,
+      },
+    },
+  });
   const config = new DocumentBuilder()
     .setTitle('API Order Service')
     .setDescription(
@@ -36,6 +53,7 @@ async function bootstrap() {
 
   SwaggerModule.setup('api', app, document);
   app.useGlobalFilters(new GlobalExceptionFilter());
+  await app.startAllMicroservices();
   await app.listen(port);
 }
 void bootstrap();

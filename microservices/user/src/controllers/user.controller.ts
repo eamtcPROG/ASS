@@ -27,7 +27,7 @@ import { ResultListDto } from '../dto/resultlist.dto';
 import { JwtGuard } from '../guards/jwt.guard';
 
 @ApiTags('User')
-@Controller('user')
+@Controller()
 export class UserController {
   constructor(
     private readonly authService: AuthService,
