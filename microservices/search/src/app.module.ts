@@ -5,6 +5,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { APP_INTERCEPTOR } from '@nestjs/core';
 import { GlobalErrorsInterceptor } from './interceptors/global-errors.interceptor';
 import { GlobalResponseInterceptor } from './interceptors/global-response.interceptor';
+import { SearchController } from './controllers/search.controller';
+import { SearchService } from './service/search.service';
 
 @Module({
   imports: [
@@ -30,8 +32,9 @@ import { GlobalResponseInterceptor } from './interceptors/global-response.interc
     }),
     TypeOrmModule.forFeature([]),
   ],
-  controllers: [],
+  controllers: [SearchController],
   providers: [
+    SearchService,
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,
