@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 import { Product } from 'src/models/product.model';
+import { ProductStatus } from 'src/constants/product-status';
 
 @Injectable()
 export class ProductService {
