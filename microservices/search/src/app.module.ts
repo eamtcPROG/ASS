@@ -11,6 +11,10 @@ import { ProductEventsController } from './events/product.events.controller';
 import { ProductService } from './service/product.service';
 import { Product } from './models/product.model';
 import { OrderEventsController } from './events/order.events.controller';
+import { ClientsModule, Transport } from '@nestjs/microservices';
+import { USER_RMQ } from './constants/service';
+import { AuthRpcClient } from './auth/auth-rpc.client';
+import { JwtIntrospectionGuard } from './auth/jwt-introspection.guard';
 
 @Module({
   imports: [
@@ -35,6 +39,22 @@ import { OrderEventsController } from './events/order.events.controller';
       },
     }),
     TypeOrmModule.forFeature([Product]),
+    ClientsModule.registerAsync([
+      {
+        name: USER_RMQ,
+        useFactory: (config: ConfigService) => ({
+          transport: Transport.RMQ,
+          options: {
+            urls: [config.getOrThrow<string>('rabbitmq.url')],
+            queue: 'user',
+            queueOptions: {
+              durable: true,
+            },
+          },
+        }),
+        inject: [ConfigService],
+      },
+    ]),
   ],
   controllers: [
     SearchController,
@@ -44,6 +64,8 @@ import { OrderEventsController } from './events/order.events.controller';
   providers: [
     SearchService,
     ProductService,
+    AuthRpcClient,
+    JwtIntrospectionGuard,
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,

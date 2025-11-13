@@ -11,6 +11,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { UserController } from './controllers/user.controller';
 import { User } from './models/user.model';
 import { JwtModule } from '@nestjs/jwt';
+import { AuthRpcController } from './rpc/auth.rpc.controller';
 
 @Module({
   imports: [
@@ -46,7 +47,7 @@ import { JwtModule } from '@nestjs/jwt';
       inject: [ConfigService],
     }),
   ],
-  controllers: [UserController],
+  controllers: [UserController, AuthRpcController],
   providers: [
     UserService,
     AuthService,
