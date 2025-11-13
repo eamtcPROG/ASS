@@ -63,3 +63,110 @@ This repository contains a NestJS/TypeScript implementation of a marketplace sys
   - Mark order cancelled and release product
 
 This structure supports learning, comparison, and evolution between monolith and microservices while keeping domain logic consistent across both.
+
+## Getting started
+
+### Prerequisites
+- Docker and Docker Compose
+- Node.js 20+ and npm (if running apps locally without Docker)
+
+### Option A: Run the microservices stack
+From `microservices/`:
+
+```bash
+cd microservices
+docker compose up -d
+```
+
+- Edge router: `http://localhost:8000`
+- Traefik dashboard (dev only): `http://localhost:8080`
+- Direct service ports (for debugging):
+  - User: `3001`
+  - Order: `3002`
+  - Search: `3003`
+  - Product: `3004`
+- Databases:
+  - `postgres-user` → `localhost:5432` db `user`
+  - `postgres-order` → `localhost:5433` db `order`
+  - `postgres-search` → `localhost:5435` db `search`
+  - `postgres-product` → `localhost:5434` db `product`
+- RabbitMQ: `localhost:5672`
+
+Service base paths via the edge router:
+- User: `http://localhost:8000/api/users`
+- Order: `http://localhost:8000/api/orders`
+- Search: `http://localhost:8000/api/search`
+- Product: `http://localhost:8000/api/products`
+
+Stop the stack:
+```bash
+docker compose down -v
+```
+
+### Option B: Run the monolith
+From `monolithic/market/`:
+
+```bash
+cd monolithic/market
+# Start Postgres (once)
+docker compose up -d
+
+# Install and run the app (requires PORT in env)
+npm install
+PORT=3000 npm run start:dev
+```
+
+Swagger UI: `http://localhost:3000/api`
+
+### Environment variables
+Common configuration is provided via `@nestjs/config`. Notable variables:
+- Database: `DATABASE_HOST`, `DATABASE_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- HTTP: `PORT`, `NODE_ENV`, `VERSION`
+- Auth: `JWT_SECRET`, `JWT_EXPIRES_IN`
+- Messaging (microservices): `RABBITMQ_URI`
+
+See each service under `microservices/*/src/config/configuration.ts` and the monolith `monolithic/market/src/config/configuration.ts` for exact keys and defaults.
+
+## Example requests (microservices via edge router)
+
+User:
+```bash
+# Sign up
+curl -sS -X POST http://localhost:8000/api/users/sign-up \
+  -H 'content-type: application/json' \
+  -d '{"email":"alice@example.com","password":"secret"}'
+
+# Sign in (returns JWT)
+curl -sS -X POST http://localhost:8000/api/users/sign-in \
+  -H 'content-type: application/json' \
+  -d '{"email":"alice@example.com","password":"secret"}'
+```
+
+Product (requires Bearer token):
+```bash
+curl -sS -X POST http://localhost:8000/api/products/ \
+  -H "authorization: Bearer <JWT>" \
+  -H 'content-type: application/json' \
+  -d '{"name":"Phone","price":799,"description":"Flagship device"}'
+```
+
+Order:
+```bash
+# Place
+curl -sS -X POST http://localhost:8000/api/orders/ \
+  -H 'content-type: application/json' \
+  -d '{"idproduct":1}'
+
+# Pay
+curl -sS -X POST http://localhost:8000/api/orders/pay/1 \
+  -H 'content-type: application/json' \
+  -d '{"amount":799}'
+
+# Cancel
+curl -sS http://localhost:8000/api/orders/cancel/1
+```
+
+Search:
+```bash
+curl -sS "http://localhost:8000/api/search/?q=phone&page=1&onpage=10"
+```

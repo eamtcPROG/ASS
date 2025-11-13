@@ -34,6 +34,39 @@
 
 ### Local development
 
-- Run via Compose to bring up the service and its PostgreSQL dependency:
-  - `order-service` listens on `3002` inside the container and is hot-reloaded in dev.
-  - Database container: `postgres-order` (database `order`, default credentials `postgres/postgres` for local).
+- From the `microservices/` folder:
+  ```bash
+  cd ../
+  docker compose up -d
+  ```
+  - Router entrypoint: `http://localhost:8000/api/orders`
+  - Swagger UI: `http://localhost:8000/api/orders/api`
+  - Service port (direct): `http://localhost:3002`
+  - Database: `postgres-order` (db `order` on `localhost:5433`, creds `postgres/postgres`)
+  - RabbitMQ: `amqp://localhost:5672`
+
+### Environment variables
+Managed via `@nestjs/config` (`src/config/configuration.ts`):
+- `PORT` (service HTTP port, default 3000 if unset in code)
+- `NODE_ENV`, `VERSION`
+- Database: `DATABASE_HOST`, `DATABASE_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- JWT: `JWT_SECRET`, `JWT_EXPIRES_IN`
+- Messaging: `RABBITMQ_URI`
+
+When running with Compose, set these in the service environment or rely on container networking (e.g., `DATABASE_HOST=postgres-order`, `RABBITMQ_URI=amqp://rabbitmq:5672`).
+
+### Example requests
+```bash
+# Place an order
+curl -sS -X POST http://localhost:8000/api/orders/ \
+  -H 'content-type: application/json' \
+  -d '{"idproduct":1}'
+
+# Pay an order
+curl -sS -X POST http://localhost:8000/api/orders/pay/1 \
+  -H 'content-type: application/json' \
+  -d '{"amount":100}'
+
+# Cancel an order
+curl -sS http://localhost:8000/api/orders/cancel/1
+```

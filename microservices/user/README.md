@@ -36,7 +36,42 @@
 
 ### Local development
 
-- Run via Compose to bring up the service and its PostgreSQL dependency:
-  - `user-service` listens on `3001` inside the container and is hot-reloaded in dev.
-  - Database container: `postgres-user` (database `user`, default credentials `postgres/postgres` for local).
+- From the `microservices/` folder:
+  ```bash
+  cd ../
+  docker compose up -d
+  ```
+  - Router entrypoint: `http://localhost:8000/api/users`
+  - Swagger UI: `http://localhost:8000/api/users/api`
+  - Service port (direct): `http://localhost:3001`
+  - Database: `postgres-user` (db `user` on `localhost:5432`, creds `postgres/postgres`)
+  - RabbitMQ: `amqp://localhost:5672`
+
+### Environment variables
+Managed via `@nestjs/config` (`src/config/configuration.ts`):
+- `PORT` (service HTTP port, default 3000 if unset in code)
+- `NODE_ENV`, `VERSION`
+- Database: `DATABASE_HOST`, `DATABASE_PORT`, `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`
+- JWT: `JWT_SECRET`, `JWT_EXPIRES_IN`
+- Messaging: `RABBITMQ_URI`
+
+When running with Compose, set these in the service environment or rely on container networking (e.g., `DATABASE_HOST=postgres-user`, `RABBITMQ_URI=amqp://rabbitmq:5672`).
+
+### Example requests
+
+```bash
+# Sign up
+curl -sS -X POST http://localhost:8000/api/users/sign-up \
+  -H 'content-type: application/json' \
+  -d '{"email":"alice@example.com","password":"secret"}'
+
+# Sign in (returns JWT)
+curl -sS -X POST http://localhost:8000/api/users/sign-in \
+  -H 'content-type: application/json' \
+  -d '{"email":"alice@example.com","password":"secret"}'
+
+# List users (requires Bearer token)
+curl -sS http://localhost:8000/api/users/ \
+  -H "authorization: Bearer <JWT>"
+```
 
