@@ -14,8 +14,8 @@ import { ProductService } from './services/product.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { PRODUCT_RMQ, SEARCH_RMQ, USER_RMQ } from './constants/service';
 import { DomainEventsPublisher } from './events/domain-events.publisher';
-import { AuthRpcClient } from './auth/auth-rpc.client';
-import { JwtIntrospectionGuard } from './auth/jwt-introspection.guard';
+import { AuthClient } from './clients/auth.client';
+import { JwtGuard } from './guards/jwt.guard';
 
 @Module({
   imports: [
@@ -84,8 +84,8 @@ import { JwtIntrospectionGuard } from './auth/jwt-introspection.guard';
     OrderService,
     ProductService,
     DomainEventsPublisher,
-    AuthRpcClient,
-    JwtIntrospectionGuard,
+    AuthClient,
+    JwtGuard,
     {
       provide: APP_INTERCEPTOR,
       useClass: GlobalErrorsInterceptor,

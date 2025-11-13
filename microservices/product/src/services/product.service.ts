@@ -29,10 +29,10 @@ export class ProductService {
     return new ListDto<ProductDto>(objects, total, onPage);
   }
 
-  async addProduct(object: AddProductDto): Promise<ProductDto> {
+  async addProduct(object: AddProductDto, userId: number): Promise<ProductDto> {
     const product = this.repo.create(object);
     // TODO: get iduser from token
-    product.iduser = 1;
+    product.iduser = userId;
     return ProductDto.fromEntity(await this.repo.save(product));
   }
 

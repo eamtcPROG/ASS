@@ -3,6 +3,7 @@ import {
   Body,
   Controller,
   Post,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import {
@@ -21,13 +22,13 @@ import { AddProductDto } from '../dto/add-product.dto';
 
 import { ResultObjectDto } from '../dto/resultobject.dto';
 import { DomainEventsPublisher } from '../events/domain-events.publisher';
-import { JwtIntrospectionGuard } from 'src/auth/jwt-introspection.guard';
+import { JwtGuard } from 'src/guards/jwt.guard';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { UserDto } from 'src/dto/user.dto';
 
 @ApiTags('Product')
 @ApiBearerAuth('jwt')
-@UseGuards(JwtIntrospectionGuard)
+@UseGuards(JwtGuard)
 @Controller()
 export class ProductController {
   constructor(
@@ -51,8 +52,10 @@ export class ProductController {
     if (!body.name || !body.price || !body.description) {
       throw new BadRequestException('Name, price and description are required');
     }
-    console.log(user);
-    const result = await this.service.addProduct(body);
+    if (!user.id) {
+      throw new UnauthorizedException('User not found');
+    }
+    const result = await this.service.addProduct(body, user.id);
     // Emit domain event for other services
     this.events.emitNewProduct(result);
 

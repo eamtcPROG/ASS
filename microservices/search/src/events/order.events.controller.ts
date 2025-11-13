@@ -12,7 +12,6 @@ export class OrderEventsController {
     @Payload() data: OrderEventDto,
     @Ctx() context: RmqContext,
   ) {
-    console.log(data);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const channel = context.getChannelRef();
 
@@ -29,7 +28,6 @@ export class OrderEventsController {
     @Payload() data: OrderEventDto,
     @Ctx() context: RmqContext,
   ) {
-    console.log(data);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const channel = context.getChannelRef();
 
@@ -44,11 +42,11 @@ export class OrderEventsController {
     @Payload() data: OrderEventDto,
     @Ctx() context: RmqContext,
   ) {
-    console.log(data);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     const channel = context.getChannelRef();
 
     const originalMsg = context.getMessage();
+
     await this.productService.reserveProduct(data.idproduct);
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
     channel.ack(originalMsg);

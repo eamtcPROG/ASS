@@ -17,13 +17,13 @@ type ValidateTokenResponse = {
 };
 
 @Controller()
-export class AuthRpcController {
+export class AuthEventController {
   constructor(
     private readonly jwtService: JwtService,
     private readonly service: UserService,
   ) {}
 
-  @MessagePattern('auth.validate-token')
+  @MessagePattern('validate_token')
   async handleValidateToken(
     @Payload() data: ValidateTokenRequest,
     @Ctx() context: RmqContext,

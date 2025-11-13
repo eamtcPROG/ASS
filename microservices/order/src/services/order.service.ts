@@ -19,17 +19,14 @@ export class OrderService {
     private readonly domainEventsPublisher: DomainEventsPublisher,
   ) {}
 
-  async placeOrder(
-    object: PlaceOrderDto,
-    // , user: User
-  ): Promise<OrderDto> {
+  async placeOrder(object: PlaceOrderDto, idUser: number): Promise<OrderDto> {
     const product = await this.productService.getProduct(object.idproduct);
     if (!product) {
       throw new BadRequestException('Product not available');
     }
     const order = this.repo.create({
       idproduct: product.id,
-      iduser: 1,
+      iduser: idUser,
       total: product.price,
       place_at: getTimestamp(),
     });
@@ -47,11 +44,10 @@ export class OrderService {
   async payOrder(
     idOrder: number,
     object: PayOrderDto,
-    // user: User,
+    idUser: number,
   ): Promise<OrderDto> {
-    // TODO: get user from token
     const order = await this.repo.findOne({
-      where: { id: idOrder, iduser: 1, status: OrderStatus.PENDING },
+      where: { id: idOrder, iduser: idUser, status: OrderStatus.PENDING },
     });
     if (!order) {
       throw new BadRequestException('Order not found');
@@ -73,10 +69,9 @@ export class OrderService {
     return OrderDto.fromEntity(result);
   }
 
-  async cancelOrder(idOrder: number): Promise<OrderDto> {
-    // TODO: get user from token
+  async cancelOrder(idOrder: number, idUser: number): Promise<OrderDto> {
     const order = await this.repo.findOne({
-      where: { id: idOrder, iduser: 1, status: OrderStatus.PENDING },
+      where: { id: idOrder, iduser: idUser, status: OrderStatus.PENDING },
     });
     if (!order) {
       throw new BadRequestException('Order not found');

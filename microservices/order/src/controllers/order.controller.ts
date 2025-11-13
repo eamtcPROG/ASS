@@ -5,6 +5,7 @@ import {
   Get,
   Param,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
@@ -22,15 +23,16 @@ import { OrderDto } from '../dto/order.dto';
 import { PlaceOrderDto } from '../dto/place-order.dto';
 import { ResultObjectDto } from '../dto/resultobject.dto';
 import { PayOrderDto } from '../dto/pay-order.dto';
+import { UserDto } from 'src/dto/user.dto';
+import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { JwtGuard } from 'src/guards/jwt.guard';
 
 @ApiTags('Order')
 @ApiBearerAuth('jwt')
-// @UseGuards(JwtGuard)
+@UseGuards(JwtGuard)
 @Controller()
 export class OrderController {
-  constructor(private readonly service: OrderService,
-    
-  ) {}
+  constructor(private readonly service: OrderService) {}
 
   @ApiOperation({ summary: 'Place an order' })
   @ApiConsumes('application/json')
@@ -46,12 +48,12 @@ export class OrderController {
   @Post('/')
   async placeOrder(
     @Body() object: PlaceOrderDto,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: UserDto,
   ): Promise<OrderDto> {
     if (!object.idproduct) {
       throw new BadRequestException('Invalid body');
     }
-    return this.service.placeOrder(object);
+    return this.service.placeOrder(object, user.id);
   }
 
   @ApiOperation({ summary: 'Pay an order' })
@@ -66,7 +68,7 @@ export class OrderController {
   async payOrder(
     @Body() object: PayOrderDto,
     @Param('id') id: number,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: UserDto,
   ): Promise<OrderDto> {
     if (!id) {
       throw new BadRequestException('Invalid id');
@@ -74,7 +76,7 @@ export class OrderController {
     if (!object.amount) {
       throw new BadRequestException('Invalid amount');
     }
-    return this.service.payOrder(Number(id), object);
+    return this.service.payOrder(Number(id), object, user.id);
   }
 
   @ApiOperation({ summary: 'Cancel an order' })
@@ -91,11 +93,11 @@ export class OrderController {
   @Get('/cancel/:id')
   async cancelOrder(
     @Param('id') id: number,
-    // @CurrentUser() user: User,
+    @CurrentUser() user: UserDto,
   ): Promise<OrderDto> {
     if (!id) {
       throw new BadRequestException('Invalid id');
     }
-    return this.service.cancelOrder(id);
+    return this.service.cancelOrder(id, user.id);
   }
 }
